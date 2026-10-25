@@ -9,159 +9,317 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
-        .contenedor {
-            max-width: 600px;
+        .container {
+            max-width: 800px;
             margin: 0 auto;
         }
 
         h1 {
-            color: white;
             text-align: center;
-            margin-bottom: 30px;
-            font-size: 24px;
+            color: white;
+            margin-bottom: 25px;
+            font-size: 1.7rem;
         }
 
-        .tarjeta {
+        .total-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .total-card h2 {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .total-card .amount {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .resumen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .resumen-card {
             background: white;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .total {
-            background: #10b981;
-            color: white;
+            padding: 18px;
             text-align: center;
-            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .resumen-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .resumen-card .icono {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .resumen-card .titulo {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .resumen-card .valor {
+            font-size: 1.2rem;
             font-weight: bold;
+            color: #1e40af;
         }
 
-        .total small {
-            font-size: 14px;
-            opacity: 0.9;
+        .categoria-section {
+            background: white;
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
 
-        .lista {
-            list-style: none;
+        .categoria-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
         }
 
-        .lista li {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
+        .categoria-header h3 {
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .categoria-total {
+            margin-left: auto;
+            font-weight: bold;
+            color: #eab308;
+        }
+
+        .item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
-        .lista li:last-child {
+        .item:last-child {
             border-bottom: none;
         }
 
-        .descripcion {
+        .item-nombre {
             font-weight: 500;
-            color: #333;
+            color: #334155;
         }
 
-        .precio {
+        .item-fecha {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .item-precio {
             font-weight: bold;
-            color: #667eea;
+            color: #16a34a;
         }
 
-        .fecha {
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-        }
-
-        .vacio {
+        .empty {
             text-align: center;
-            color: #999;
-            padding: 20px;
-        }
-
-        .actualizar {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-
-        .actualizar:hover {
-            background: #5a6edb;
+            padding: 25px;
+            color: #94a3b8;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="contenedor">
-        <h1>💰 Mi Control de Gastos</h1>
+    <div class="container">
+        <h1>🛒 Mi Control de Gastos</h1>
 
-        <div class="tarjeta total">
-            <small>Total Gastado</small><br>
-            $<span id="total">0.00</span>
+        <!-- Tarjeta del Total General -->
+        <div class="total-card">
+            <h2>💰 Total Gastado</h2>
+            <div class="amount" id="total-general">$0.00</div>
         </div>
 
-        <div class="tarjeta">
-            <h3 style="margin-bottom: 15px; color: #444;">📋 Lista de Gastos</h3>
-            <ul class="lista" id="lista">
-                <li class="vacio">No hay gastos registrados todavía</li>
-            </ul>
-            <button class="actualizar" onclick="cargarDatos()">🔄 Actualizar</button>
+        <!-- Resumen por categorías -->
+        <div class="resumen-grid">
+            <div class="resumen-card">
+                <div class="icono">🍎</div>
+                <div class="titulo">Comida</div>
+                <div class="valor" id="res-comida">$0.00</div>
+            </div>
+            <div class="resumen-card">
+                <div class="icono">🥤</div>
+                <div class="titulo">Bebidas</div>
+                <div class="valor" id="res-bebidas">$0.00</div>
+            </div>
+            <div class="resumen-card">
+                <div class="icono">🍪</div>
+                <div class="titulo">Abarrotes</div>
+                <div class="valor" id="res-abarrotes">$0.00</div>
+            </div>
+            <div class="resumen-card">
+                <div class="icono">📦</div>
+                <div class="titulo">Otros</div>
+                <div class="valor" id="res-otros">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Sección: Comida -->
+        <div class="categoria-section">
+            <div class="categoria-header">
+                <span>🍎</span>
+                <h3>Comida</h3>
+                <span class="categoria-total" id="cat-comida">$0.00</span>
+            </div>
+            <div id="lista-comida">
+                <div class="empty">Sin gastos aún</div>
+            </div>
+        </div>
+
+        <!-- Sección: Bebidas -->
+        <div class="categoria-section">
+            <div class="categoria-header">
+                <span>🥤</span>
+                <h3>Bebidas</h3>
+                <span class="categoria-total" id="cat-bebidas">$0.00</span>
+            </div>
+            <div id="lista-bebidas">
+                <div class="empty">Sin gastos aún</div>
+            </div>
+        </div>
+
+        <!-- Sección: Abarrotes -->
+        <div class="categoria-section">
+            <div class="categoria-header">
+                <span>🍪</span>
+                <h3>Abarrotes</h3>
+                <span class="categoria-total" id="cat-abarrotes">$0.00</span>
+            </div>
+            <div id="lista-abarrotes">
+                <div class="empty">Sin gastos aún</div>
+            </div>
+        </div>
+
+        <!-- Sección: Otros -->
+        <div class="categoria-section">
+            <div class="categoria-header">
+                <span>📦</span>
+                <h3>Otros</h3>
+                <span class="categoria-total" id="cat-otros">$0.00</span>
+            </div>
+            <div id="lista-otros">
+                <div class="empty">Sin gastos aún</div>
+            </div>
         </div>
     </div>
 
     <script>
-        async function cargarDatos() {
-            try {
-                const respuesta = await fetch('/api/gastos');
-                const datos = await respuesta.json();
-                const lista = document.getElementById('lista');
-                const totalElem = document.getElementById('total');
-                
-                lista.innerHTML = '';
-                
-                if (datos.length === 0) {
-                    lista.innerHTML = '<li class="vacio">No hay gastos registrados todavía</li>';
-                    totalElem.textContent = '0.00';
-                    return;
-                }
-                
-                let total = 0;
-                datos.reverse().forEach(gasto => {
-                    total += parseFloat(gasto.precio);
-                    const item = document.createElement('li');
-                    item.innerHTML = `
-                        <div>
-                            <div class="descripcion">${gasto.descripcion}</div>
-                            <div class="fecha">${gasto.fecha || ''}</div>
-                        </div>
-                        <div class="precio">$${parseFloat(gasto.precio).toFixed(2)}</div>
-                    `;
-                    lista.appendChild(item);
-                });
-                
-                totalElem.textContent = total.toFixed(2);
-            } catch (error) {
-                alert('❌ No se pudieron cargar los datos');
-                console.error(error);
+        let gastos = [];
+
+        // Palabras clave para clasificar automáticamente
+        const categorias = {
+            comida: ['pan', 'huevo', 'carne', 'pollo', 'pescado', 'arroz', 'frijol', 'lenteja', 'atún', 'leche', 'queso', 'mantequilla', 'yogur', 'cereal', 'azúcar', 'sal', 'aceite', 'especia', 'comida', 'verdura', 'fruta', 'huevo', 'carnudo', 'blanco', 'albac', 'yervit'],
+            bebidas: ['agua', 'refresco', 'jugo', 'leche', 'café', 'té', 'gaseosa', 'cerveza', 'vino', 'bebida'],
+            abarrotes: ['arroz', 'pasta', 'fideo', 'harina', 'galleta', 'pan', 'azúcar', 'café', 'aceite', 'detergente', 'jabón', 'papel', 'servitoalla', 'limpieza']
+        };
+
+        function clasificar(nombre) {
+            const texto = nombre.toLowerCase();
+            for (const palabra of categorias.comida) {
+                if (texto.includes(palabra)) return 'comida';
             }
+            for (const palabra of categorias.bebidas) {
+                if (texto.includes(palabra)) return 'bebidas';
+            }
+            for (const palabra of categorias.abarrotes) {
+                if (texto.includes(palabra)) return 'abarrotes';
+            }
+            return 'otros';
         }
 
-        cargarDatos();
+        function cargarGastos() {
+            const guardados = localStorage.getItem('gastos');
+            if (guardados) gastos = JSON.parse(guardados);
+            mostrarTodo();
+        }
+
+        function mostrarTodo() {
+            const grupos = {
+                comida: [],
+                bebidas: [],
+                abarrotes: [],
+                otros: []
+            };
+
+            gastos.forEach(g => {
+                const cat = clasificar(g.nombre);
+                grupos[cat].push(g);
+            });
+
+            let totalGeneral = 0;
+
+            // Recorrer cada categoría
+            for (const cat in grupos) {
+                const lista = document.getElementById(`lista-${cat}`);
+                const totalEl = document.getElementById(`cat-${cat}`);
+                const resEl = document.getElementById(`res-${cat}`);
+                
+                let totalCat = 0;
+                let html = '';
+
+                if (grupos[cat].length === 0) {
+                    html = '<div class="empty">Sin gastos aún</div>';
+                } else {
+                    grupos[cat].forEach(g => {
+                        totalCat += parseFloat(g.precio);
+                        totalGeneral += parseFloat(g.precio);
+                        const fecha = new Date(g.fecha).toLocaleDateString('es-ES', { 
+                            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        });
+                        html += `
+                            <div class="item">
+                                <div>
+                                    <div class="item-nombre">${g.nombre}</div>
+                                    <div class="item-fecha">${fecha}</div>
+                                </div>
+                                <div class="item-precio">$${parseFloat(g.precio).toFixed(2)}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                lista.innerHTML = html;
+                totalEl.textContent = `$${totalCat.toFixed(2)}`;
+                resEl.textContent = `$${totalCat.toFixed(2)}`;
+            }
+
+            document.getElementById('total-general').textContent = `$${totalGeneral.toFixed(2)}`;
+        }
+
+        cargarGastos();
+        setInterval(cargarGastos, 10000);
     </script>
 </body>
 </html>
