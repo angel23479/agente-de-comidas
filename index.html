@@ -156,13 +156,11 @@
     <div class="container">
         <h1>🛒 Mi Control de Gastos</h1>
 
-        <!-- Tarjeta del Total General -->
         <div class="total-card">
             <h2>💰 Total Gastado</h2>
             <div class="amount" id="total-general">$0.00</div>
         </div>
 
-        <!-- Resumen por categorías -->
         <div class="resumen-grid">
             <div class="resumen-card">
                 <div class="icono">🍎</div>
@@ -186,117 +184,90 @@
             </div>
         </div>
 
-        <!-- Sección: Comida -->
         <div class="categoria-section">
             <div class="categoria-header">
                 <span>🍎</span>
                 <h3>Comida</h3>
                 <span class="categoria-total" id="cat-comida">$0.00</span>
             </div>
-            <div id="lista-comida">
-                <div class="empty">Sin gastos aún</div>
-            </div>
+            <div id="lista-comida"><div class="empty">Sin gastos aún</div></div>
         </div>
 
-        <!-- Sección: Bebidas -->
         <div class="categoria-section">
             <div class="categoria-header">
                 <span>🥤</span>
                 <h3>Bebidas</h3>
                 <span class="categoria-total" id="cat-bebidas">$0.00</span>
             </div>
-            <div id="lista-bebidas">
-                <div class="empty">Sin gastos aún</div>
-            </div>
+            <div id="lista-bebidas"><div class="empty">Sin gastos aún</div></div>
         </div>
 
-        <!-- Sección: Abarrotes -->
         <div class="categoria-section">
             <div class="categoria-header">
                 <span>🍪</span>
                 <h3>Abarrotes</h3>
                 <span class="categoria-total" id="cat-abarrotes">$0.00</span>
             </div>
-            <div id="lista-abarrotes">
-                <div class="empty">Sin gastos aún</div>
-            </div>
+            <div id="lista-abarrotes"><div class="empty">Sin gastos aún</div></div>
         </div>
 
-        <!-- Sección: Otros -->
         <div class="categoria-section">
             <div class="categoria-header">
                 <span>📦</span>
                 <h3>Otros</h3>
                 <span class="categoria-total" id="cat-otros">$0.00</span>
             </div>
-            <div id="lista-otros">
-                <div class="empty">Sin gastos aún</div>
-            </div>
+            <div id="lista-otros"><div class="empty">Sin gastos aún</div></div>
         </div>
     </div>
 
     <script>
         let gastos = [];
 
-        // Palabras clave para clasificar automáticamente
         const categorias = {
-            comida: ['pan', 'huevo', 'carne', 'pollo', 'pescado', 'arroz', 'frijol', 'lenteja', 'atún', 'leche', 'queso', 'mantequilla', 'yogur', 'cereal', 'azúcar', 'sal', 'aceite', 'especia', 'comida', 'verdura', 'fruta', 'huevo', 'carnudo', 'blanco', 'albac', 'yervit'],
-            bebidas: ['agua', 'refresco', 'jugo', 'leche', 'café', 'té', 'gaseosa', 'cerveza', 'vino', 'bebida'],
-            abarrotes: ['arroz', 'pasta', 'fideo', 'harina', 'galleta', 'pan', 'azúcar', 'café', 'aceite', 'detergente', 'jabón', 'papel', 'servitoalla', 'limpieza']
+            comida: ['pan','huevo','carne','pollo','pescado','arroz','frijol','lenteja','atún','leche','queso','mantequilla','yogur','cereal','azúcar','sal','aceite','especia','comida','verdura','fruta','carnudo','blanco','albac','yervit'],
+            bebidas: ['agua','refresco','jugo','leche','café','té','gaseosa','bebida'],
+            abarrotes: ['pasta','fideo','harina','galleta','detergente','jabón','papel','servitoalla','limpieza']
         };
 
         function clasificar(nombre) {
             const texto = nombre.toLowerCase();
-            for (const palabra of categorias.comida) {
-                if (texto.includes(palabra)) return 'comida';
-            }
-            for (const palabra of categorias.bebidas) {
-                if (texto.includes(palabra)) return 'bebidas';
-            }
-            for (const palabra of categorias.abarrotes) {
-                if (texto.includes(palabra)) return 'abarrotes';
-            }
+            for (const p of categorias.comida) if (texto.includes(p)) return 'comida';
+            for (const p of categorias.bebidas) if (texto.includes(p)) return 'bebidas';
+            for (const p of categorias.abarrotes) if (texto.includes(p)) return 'abarrotes';
             return 'otros';
         }
 
-        function cargarGastos() {
-            const guardados = localStorage.getItem('gastos');
-            if (guardados) gastos = JSON.parse(guardados);
+        async function cargarGastos() {
+            try {
+                const res = await fetch('/api/gastos');
+                if (res.ok) gastos = await res.json();
+            } catch (e) {
+                const guardados = localStorage.getItem('gastos');
+                if (guardados) gastos = JSON.parse(guardados);
+            }
             mostrarTodo();
         }
 
         function mostrarTodo() {
-            const grupos = {
-                comida: [],
-                bebidas: [],
-                abarrotes: [],
-                otros: []
-            };
-
-            gastos.forEach(g => {
-                const cat = clasificar(g.nombre);
-                grupos[cat].push(g);
-            });
-
+            const grupos = { comida:[], bebidas:[], abarrotes:[], otros:[] };
+            gastos.forEach(g => grupos[clasificar(g.nombre)].push(g));
+            
             let totalGeneral = 0;
-
-            // Recorrer cada categoría
             for (const cat in grupos) {
                 const lista = document.getElementById(`lista-${cat}`);
                 const totalEl = document.getElementById(`cat-${cat}`);
                 const resEl = document.getElementById(`res-${cat}`);
+                let totalCat = 0, html = '';
                 
-                let totalCat = 0;
-                let html = '';
-
                 if (grupos[cat].length === 0) {
                     html = '<div class="empty">Sin gastos aún</div>';
                 } else {
                     grupos[cat].forEach(g => {
                         totalCat += parseFloat(g.precio);
                         totalGeneral += parseFloat(g.precio);
-                        const fecha = new Date(g.fecha).toLocaleDateString('es-ES', { 
-                            day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        const fecha = new Date(g.fecha).toLocaleDateString('es-ES', {
+                            day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
                         });
                         html += `
                             <div class="item">
@@ -309,17 +280,15 @@
                         `;
                     });
                 }
-
                 lista.innerHTML = html;
                 totalEl.textContent = `$${totalCat.toFixed(2)}`;
                 resEl.textContent = `$${totalCat.toFixed(2)}`;
             }
-
             document.getElementById('total-general').textContent = `$${totalGeneral.toFixed(2)}`;
         }
 
         cargarGastos();
-        setInterval(cargarGastos, 10000);
+        setInterval(cargarGastos, 15000);
     </script>
 </body>
 </html>
