@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Control de Gastos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .contenedor {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .tarjeta {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .total {
+            background: #10b981;
+            color: white;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .total small {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .lista {
+            list-style: none;
+        }
+
+        .lista li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lista li:last-child {
+            border-bottom: none;
+        }
+
+        .descripcion {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .precio {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .fecha {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .vacio {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        .actualizar {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .actualizar:hover {
+            background: #5a6edb;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>💰 Mi Control de Gastos</h1>
+
+        <div class="tarjeta total">
+            <small>Total Gastado</small><br>
+            $<span id="total">0.00</span>
+        </div>
+
+        <div class="tarjeta">
+            <h3 style="margin-bottom: 15px; color: #444;">📋 Lista de Gastos</h3>
+            <ul class="lista" id="lista">
+                <li class="vacio">No hay gastos registrados todavía</li>
+            </ul>
+            <button class="actualizar" onclick="cargarDatos()">🔄 Actualizar</button>
+        </div>
+    </div>
+
+    <script>
+        async function cargarDatos() {
+            try {
+                const respuesta = await fetch('/api/gastos');
+                const datos = await respuesta.json();
+                const lista = document.getElementById('lista');
+                const totalElem = document.getElementById('total');
+                
+                lista.innerHTML = '';
+                
+                if (datos.length === 0) {
+                    lista.innerHTML = '<li class="vacio">No hay gastos registrados todavía</li>';
+                    totalElem.textContent = '0.00';
+                    return;
+                }
+                
+                let total = 0;
+                datos.reverse().forEach(gasto => {
+                    total += parseFloat(gasto.precio);
+                    const item = document.createElement('li');
+                    item.innerHTML = `
+                        <div>
+                            <div class="descripcion">${gasto.descripcion}</div>
+                            <div class="fecha">${gasto.fecha || ''}</div>
+                        </div>
+                        <div class="precio">$${parseFloat(gasto.precio).toFixed(2)}</div>
+                    `;
+                    lista.appendChild(item);
+                });
+                
+                totalElem.textContent = total.toFixed(2);
+            } catch (error) {
+                alert('❌ No se pudieron cargar los datos');
+                console.error(error);
+            }
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>

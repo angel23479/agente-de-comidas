@@ -1,0 +1,11 @@
+{
+  "name": "control-comida-bot",
+  "version": "1.0.0",
+  "description": "Bot de Telegram para control de gastos",
+  "main": "servidor.js",
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "telegraf": "^4.15.3"
+  }
+}
