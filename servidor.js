@@ -36,15 +36,45 @@ app.get('/api/gastos', (req, res) => {
 // ------------------- COMANDOS DEL BOT -------------------
 
 bot.start((ctx) => {
-  ctx.reply('¡Hola! 👋 Escribe algo como: "Pan por 2.50" y lo registraré por ti.');
+  ctx.reply(`¡Hola! 👋 Bienvenido a Mi Control de Comida 🥗
+
+¿Qué quieres hacer? Escribe una opción:
+
+📝 Registrar: "Pan por 1.50"
+📊 Ver total
+📋 Ver lista
+🗑️ Borrar todo`);
 });
 
 bot.help((ctx) => {
   ctx.reply(`Comandos disponibles:
-📌 Escribe: "Pan por 1.50" → registrar gasto
-📌 /gastos → ver todos los gastos
-📌 /total → ver suma total
-📌 /borrartodo → borrar todo`);
+📝 Escribe: "Pan por 1.50" → registrar gasto
+📊 /total o "ver total" → ver suma total
+📋 /gastos o "ver lista" → ver todos los gastos
+🗑️ /borrartodo o "borrar todo" → borrar todo`);
+});
+
+// Comandos con frases naturales
+bot.hears(['ver total', 'cuánto gasté', 'cuanto gaste', 'total'], (ctx) => {
+  const total = gastos.reduce((sum, g) => sum + parseFloat(g.precio), 0);
+  ctx.reply(`💰 Total gastado: $${total.toFixed(2)}`);
+});
+
+bot.hears(['ver lista', 'ver todo', 'mis gastos', 'lista'], (ctx) => {
+  if (gastos.length === 0) {
+    ctx.reply('📋 No hay gastos registrados.');
+    return;
+  }
+  let texto = '📋 Lista de gastos:\n';
+  gastos.forEach((g, i) => {
+    texto += `${i + 1}. ${g.descripcion} - $${g.precio}\n`;
+  });
+  ctx.reply(texto);
+});
+
+bot.hears(['borrar todo', 'borrar', 'limpiar'], (ctx) => {
+  gastos = [];
+  ctx.reply('🗑️ Todos los gastos han sido borrados.');
 });
 
 bot.command('gastos', (ctx) => {
@@ -71,25 +101,30 @@ bot.command('borrartodo', (ctx) => {
 
 // Registrar gastos con formato libre
 bot.on('text', (ctx) => {
-  const texto = ctx.message.text;
+  const texto = ctx.message.text.toLowerCase();
   
   // Ignorar comandos
   if (texto.startsWith('/')) return;
+  if (texto.includes('ver total') || texto.includes('cuánto gasté') || 
+      texto.includes('ver lista') || texto.includes('borrar todo')) return;
 
   // Buscar un número en el texto
-  const coincidencia = texto.match(/(\d+[.,]?\d*)/);
+  const coincidencia = ctx.message.text.match(/(\d+[.,]?\d*)/);
   
   if (coincidencia) {
     const precio = parseFloat(coincidencia[1].replace(',', '.'));
-    const descripcion = texto.replace(coincidencia[1], '').replace(/por|de|cuesta|es/g, '').trim();
+    let descripcion = ctx.message.text.replace(coincidencia[1], '').replace(/por|de|cuesta|es|la|el|un|una/g, '').trim();
+    
+    if (!descripcion) descripcion = 'Sin descripción';
     
     gastos.push({
-      descripcion: descripcion || 'Sin descripción',
+      descripcion: descripcion,
       precio: precio,
-      fecha: new Date().toLocaleDateString('es-EC')
+      fecha: new Date().toLocaleDateString('es-EC'),
+      categoria: 'Comida'
     });
     
-    ctx.reply(`✅ Registrado: ${descripcion || 'Gasto'} - $${precio}`);
+    ctx.reply(`✅ Registrado: ${descripcion} - $${precio}`);
   } else {
     ctx.reply('⚠️ No detecté un precio. Ejemplo: "Pan por 1.50"');
   }
