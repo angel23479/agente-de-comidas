@@ -67,17 +67,23 @@ O di:
 🗑️ "Borrar todo"`);
 });
 
-bot.hears(['ver total', 'cuánto gasté', 'cuanto gaste', 'total'], (ctx) => {
+// ✅ PRIMERO: Los comandos y frases especiales
+bot.hears(['ver total', 'cuánto gasté', 'cuanto gaste', 'total general', 'total'], (ctx) => {
   const gastos = leerGastos();
-  const total = gastos.reduce((s, g) => s + parseFloat(g.precio), 0);
+  const total = gastos.reduce((sum, g) => sum + parseFloat(g.precio), 0);
   ctx.reply(`💰 Total gastado: $${total.toFixed(2)}`);
 });
 
 bot.hears(['ver lista', 'ver todo', 'mis gastos', 'lista'], (ctx) => {
   const gastos = leerGastos();
-  if (gastos.length === 0) return ctx.reply('📋 No hay gastos registrados.');
+  if (gastos.length === 0) {
+    ctx.reply('📋 No hay gastos registrados.');
+    return;
+  }
   let texto = '📋 Lista de gastos:\n';
-  gastos.forEach((g, i) => texto += `${i + 1}. ${g.descripcion} - $${g.precio}\n`);
+  gastos.forEach((g, i) => {
+    texto += `${i + 1}. ${g.descripcion} - $${g.precio}\n`;
+  });
   ctx.reply(texto);
 });
 
@@ -86,17 +92,26 @@ bot.hears(['borrar todo', 'borrar', 'limpiar'], (ctx) => {
   ctx.reply('🗑️ Todos los gastos han sido borrados.');
 });
 
+// ✅ ÚLTIMO: Registrar gastos (solo si no es ninguna de las frases anteriores)
 bot.on('text', (ctx) => {
   const texto = ctx.message.text;
   const tMinus = texto.toLowerCase();
   
+  // Ignorar comandos y frases especiales
   if (texto.startsWith('/')) return;
-  if (tMinus.includes('ver total') || tMinus.includes('ver lista') || tMinus.includes('borrar todo')) return;
+  if (tMinus.includes('ver total') || 
+      tMinus.includes('cuánto gasté') || 
+      tMinus.includes('cuanto gaste') ||
+      tMinus.includes('total general') ||
+      tMinus.includes('ver lista') || 
+      tMinus.includes('borrar todo')) return;
 
   const coincidencia = texto.match(/(\d+[.,]?\d*)/);
   if (coincidencia) {
     const precio = parseFloat(coincidencia[1].replace(',', '.'));
-    let descripcion = texto.replace(coincidencia[1], '').replace(/por|de|cuesta|la|el|un|una/g, '').trim();
+    let descripcion = texto.replace(coincidencia[1], '')
+                           .replace(/por|de|cuesta|la|el|un|una/g, '')
+                           .trim();
     if (!descripcion) descripcion = 'Sin descripción';
     const categoria = detectarCategoria(descripcion);
     
