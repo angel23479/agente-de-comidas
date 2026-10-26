@@ -221,74 +221,92 @@
         </div>
     </div>
 
-    <script>
-        let gastos = [];
+   <script>
+let gastos = [];
 
-        const categorias = {
-            comida: ['pan','huevo','carne','pollo','pescado','arroz','frijol','lenteja','atún','leche','queso','mantequilla','yogur','cereal','azúcar','sal','aceite','especia','comida','verdura','fruta','carnudo','blanco','albac','yervit'],
-            bebidas: ['agua','refresco','jugo','leche','café','té','gaseosa','bebida'],
-            abarrotes: ['pasta','fideo','harina','galleta','detergente','jabón','papel','servitoalla','limpieza']
-        };
+// 🏷️ Clasificar categoría
+function clasificar(texto) {
+  const categorias = {
+    comida: ['pan','pollo','arroz','carne','pescado','huevo','fruta','verdura','almuerzo','cena','desayuno','comida','sopa','ensalada','hamburguesa','pizza'],
+    bebidas: ['agua','refresco','jugo','café','té','gaseosa','leche','bebida'],
+    abarrotes: ['azúcar','sal','aceite','fideos','limpieza','jabón','papel','abarrotes','galletas','cereal']
+  };
+  const t = texto.toLowerCase();
+  if (categorias.comida.some(p => t.includes(p))) return 'comida';
+  if (categorias.bebidas.some(p => t.includes(p))) return 'bebidas';
+  if (categorias.abarrotes.some(p => t.includes(p))) return 'abarrotes';
+  return 'otros';
+}
 
-        function clasificar(nombre) {
-            const texto = nombre.toLowerCase();
-            for (const p of categorias.comida) if (texto.includes(p)) return 'comida';
-            for (const p of categorias.bebidas) if (texto.includes(p)) return 'bebidas';
-            for (const p of categorias.abarrotes) if (texto.includes(p)) return 'abarrotes';
-            return 'otros';
-        }
+// 📋 Cargar gastos desde el servidor
+async function cargarGastos() {
+  try {
+    const res = await fetch('/api/gastos');
+    if (res.ok) {
+      gastos = await res.json();
+      console.log('✅ Gastos cargados:', gastos);
+    }
+  } catch (e) {
+    console.log('⚠️ Error cargando del servidor:', e);
+    const guardados = localStorage.getItem('gastos');
+    if (guardados) gastos = JSON.parse(guardados);
+  }
+  mostrarTodo();
+}
 
-        async function cargarGastos() {
-            try {
-                const res = await fetch('/api/gastos');
-                if (res.ok) gastos = await res.json();
-            } catch (e) {
-                const guardados = localStorage.getItem('gastos');
-                if (guardados) gastos = JSON.parse(guardados);
-            }
-            mostrarTodo();
-        }
+// 📊 Mostrar todo en la página
+function mostrarTodo() {
+  const grupos = { comida: [], bebidas: [], abarrotes: [], otros: [] };
+  
+  gastos.forEach(g => {
+    const cat = clasificar(g.descripcion);
+    grupos[cat].push(g);
+  });
 
-        function mostrarTodo() {
-            const grupos = { comida:[], bebidas:[], abarrotes:[], otros:[] };
-            gastos.forEach(g => grupos[clasificar(g.nombre)].push(g));
-            
-            let totalGeneral = 0;
-            for (const cat in grupos) {
-                const lista = document.getElementById(`lista-${cat}`);
-                const totalEl = document.getElementById(`cat-${cat}`);
-                const resEl = document.getElementById(`res-${cat}`);
-                let totalCat = 0, html = '';
-                
-                if (grupos[cat].length === 0) {
-                    html = '<div class="empty">Sin gastos aún</div>';
-                } else {
-                    grupos[cat].forEach(g => {
-                        totalCat += parseFloat(g.precio);
-                        totalGeneral += parseFloat(g.precio);
-                        const fecha = new Date(g.fecha).toLocaleDateString('es-ES', {
-                            day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
-                        });
-                        html += `
-                            <div class="item">
-                                <div>
-                                    <div class="item-nombre">${g.nombre}</div>
-                                    <div class="item-fecha">${fecha}</div>
-                                </div>
-                                <div class="item-precio">$${parseFloat(g.precio).toFixed(2)}</div>
-                            </div>
-                        `;
-                    });
-                }
-                lista.innerHTML = html;
-                totalEl.textContent = `$${totalCat.toFixed(2)}`;
-                resEl.textContent = `$${totalCat.toFixed(2)}`;
-            }
-            document.getElementById('total-general').textContent = `$${totalGeneral.toFixed(2)}`;
-        }
+  // Totales por categoría
+  const totalComida = grupos.comida.reduce((s, g) => s + parseFloat(g.precio), 0);
+  const totalBebidas = grupos.bebidas.reduce((s, g) => s + parseFloat(g.precio), 0);
+  const totalAbarrotes = grupos.abarrotes.reduce((s, g) => s + parseFloat(g.precio), 0);
+  const totalOtros = grupos.otros.reduce((s, g) => s + parseFloat(g.precio), 0);
+  const totalGeneral = totalComida + totalBebidas + totalAbarrotes + totalOtros;
 
-        cargarGastos();
-        setInterval(cargarGastos, 15000);
-    </script>
-</body>
-</html>
+  // Actualizar valores en la página
+  const elTotalGeneral = document.getElementById('total-general');
+  const elCatComida = document.getElementById('cat-comida');
+  const elCatBebidas = document.getElementById('cat-bebidas');
+  const elCatAbarrotes = document.getElementById('cat-abarrotes');
+  const elCatOtros = document.getElementById('cat-otros');
+
+  if (elTotalGeneral) elTotalGeneral.textContent = `$${totalGeneral.toFixed(2)}`;
+  if (elCatComida) elCatComida.textContent = `$${totalComida.toFixed(2)}`;
+  if (elCatBebidas) elCatBebidas.textContent = `$${totalBebidas.toFixed(2)}`;
+  if (elCatAbarrotes) elCatAbarrotes.textContent = `$${totalAbarrotes.toFixed(2)}`;
+  if (elCatOtros) elCatOtros.textContent = `$${totalOtros.toFixed(2)}`;
+
+  // Mostrar lista por categoría
+  const listaComida = document.getElementById('lista-comida');
+  const listaBebidas = document.getElementById('lista-bebidas');
+  const listaAbarrotes = document.getElementById('lista-abarrotes');
+  const listaOtros = document.getElementById('lista-otros');
+
+  if (listaComida) listaComida.innerHTML = grupos.comida.length 
+    ? grupos.comida.map(g => `<div>${g.descripcion} - $${g.precio}</div>`).join('')
+    : '<div class="text-muted">Sin gastos aún</div>';
+  
+  if (listaBebidas) listaBebidas.innerHTML = grupos.bebidas.length 
+    ? grupos.bebidas.map(g => `<div>${g.descripcion} - $${g.precio}</div>`).join('')
+    : '<div class="text-muted">Sin gastos aún</div>';
+  
+  if (listaAbarrotes) listaAbarrotes.innerHTML = grupos.abarrotes.length 
+    ? grupos.abarrotes.map(g => `<div>${g.descripcion} - $${g.precio}</div>`).join('')
+    : '<div class="text-muted">Sin gastos aún</div>';
+  
+  if (listaOtros) listaOtros.innerHTML = grupos.otros.length 
+    ? grupos.otros.map(g => `<div>${g.descripcion} - $${g.precio}</div>`).join('')
+    : '<div class="text-muted">Sin gastos aún</div>';
+}
+
+// Cargar al abrir la página
+cargarGastos();
+</script>
+                 
